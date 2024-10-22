@@ -3,32 +3,33 @@ package main
 import (
 	"fish/config"
 	"fish/db"
-	"fish/handlers"
+	"fish/router"
 	"log"
 	"net/http"
 	"time"
 )
 
 func main() {
-	// 加载配置
+	// Load configuration
 	cfg := config.LoadConfig()
 
-	// 初始化数据库
+	// Initialize the database
 	db.InitDB(cfg)
 	defer db.CloseDB()
 
-	// 设置WebSocket路由
-	http.HandleFunc("/ws", handlers.WebSocketHandler)
+	// Initialize routes
+	r := router.InitializeRoutes()
 
-	// 启动HTTP服务器
+	// Create the HTTP server
 	server := &http.Server{
 		Addr:         cfg.ServerAddr,
+		Handler:      r, // Use the router as the handler
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
 
-	log.Printf("服务器正在运行，监听地址: %s", cfg.ServerAddr)
+	log.Printf("Server is running on %s", cfg.ServerAddr)
 	if err := server.ListenAndServe(); err != nil {
-		log.Fatalf("服务器启动失败: %v", err)
+		log.Fatalf("Failed to start server: %v", err)
 	}
 }
